@@ -10,6 +10,10 @@ import { UserResolver } from "./UserResolver";
   const app = express();
   app.get("/", (_req, res) => res.send("Say Hello"));
 
+  app.post("/refresh_token", req => {
+    console.log(req.headers);
+  });
+
   await createConnection();
 
   const apolloServer = new ApolloServer({
