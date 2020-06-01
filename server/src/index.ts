@@ -1,10 +1,30 @@
+import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import "reflect-metadata";
+
 
 
 (async()=>{
     const app = express();
     app.get('/', (_req, res)=>res.send("Say Hello"))
+
+    const apolloServer = new ApolloServer({
+        typeDefs:`
+        type Query {
+            hello: String!
+        }`
+        ,
+        resolvers: {
+            Query: {
+                hello: ()=> "hello world"
+            }
+        }
+    })
+
+    apolloServer.applyMiddleware({app})
+
+    console.log(apolloServer.subscriptionsPath) // remove afterwards
+
     app.listen(4000, ()=>{
         console.log('express server started')
     })
