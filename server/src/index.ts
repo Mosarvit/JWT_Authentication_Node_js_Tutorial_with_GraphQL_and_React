@@ -5,28 +5,24 @@ import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import { UserResolver } from "./UserResolver";
 
+(async () => {
+  const app = express();
+  app.get("/", (_req, res) => res.send("Say Hello"));
 
+  await createConnection();
 
-(async()=>{
-    const app = express();
-    app.get('/', (_req, res)=>res.send("Say Hello"))
+  const apolloServer = new ApolloServer({
+    schema: await buildSchema({
+      resolvers: [UserResolver]
+    }),
+    context: ({ req, res }) => ({ req, res })
+  });
 
-    await createConnection()
+  apolloServer.applyMiddleware({ app });
 
-    const apolloServer = new ApolloServer({
-        schema: await buildSchema({
-            resolvers: [UserResolver]
-        })
-    })
+  console.log(apolloServer.subscriptionsPath); // remove afterwards
 
-    apolloServer.applyMiddleware({app})
-
-    console.log(apolloServer.subscriptionsPath) // remove afterwards
-
-    app.listen(4000, ()=>{
-        console.log('express server started')
-    })
-
-
-})()
-
+  app.listen(4000, () => {
+    console.log("express server started");
+  });
+})();
