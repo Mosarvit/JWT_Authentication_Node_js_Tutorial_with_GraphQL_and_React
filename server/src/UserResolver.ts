@@ -3,16 +3,19 @@ import {
   Arg,
   Ctx,
   Field,
+  Int,
   Mutation,
   ObjectType,
   Query,
   Resolver,
   UseMiddleware
 } from "type-graphql";
+import { getConnection } from "typeorm";
 import { createAccessToken, createRefreshToken } from "./auth";
 import { User } from "./entity/User";
 import { isAuth } from "./isAuthMiddleware";
 import { MyContext } from "./MyContext";
+import { sendRefreshToken } from "./sendRefreshToken";
 
 @ObjectType()
 class LoginResponse {
@@ -55,6 +58,15 @@ export class UserResolver {
     }
     return true;
   }
+
+  @Mutation(() => Boolean)
+  async revokeRefreshTokensForUser(@Arg("userId", () => Int) userId: number) {
+    await getConnection()
+      .getRepository(User)
+      .increment({ id: userId }, "tokenVersion", 1);
+    return true;
+  }
+
   @Mutation(() => LoginResponse)
   async login(
     @Arg("email") email: string,
@@ -75,9 +87,8 @@ export class UserResolver {
 
     // login successful
 
-    res.cookie("jid", createRefreshToken(user), {
-      httpOnly: true
-    });
+    sendRefreshToken(res, createRefreshToken(user));
+
     return {
       accessToken: createAccessToken(user)
     };
